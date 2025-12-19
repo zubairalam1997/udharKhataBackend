@@ -1,0 +1,150 @@
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserType {
+  BUSINESS
+  PERSONAL
+}
+
+enum TxType {
+  CREDIT  
+  PAYMENT
+}
+
+enum TxStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+model User {
+  id    String     @id @default(uuid())
+  // basic user details
+  email String?  @unique
+  phoneNumber String @unique
+  
+  // user type
+  userType UserType @default(PERSONAL)
+
+  //business profile
+  businessName String?
+  gstIn String?
+
+  // personal profile
+  displayName String?
+
+  // settings
+  autoReminder Boolean @default(true)
+  riskLimit Decimal @default(5000)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // requests initiated
+  sentRequests TransactionRequest[] @relation("Sender")
+  // requests recieved
+  recievedRequests TransactionRequest[] @relation("Reciever")
+
+  // relations
+  contacts Contact[]
+  ledger Ledger[]
+  
+
+  @@map("users")
+
+}
+
+model Contact{
+  id String @id @default(uuid())
+
+  // definations by user
+  name String
+  phoneNumber String 
+  
+  // if created contact is a user
+  linkedUserId String?
+  
+  // aggregated data
+  currentBalance Decimal @default(0) @db.Decimal(12,2)
+
+  userId String
+  user User @relation(fields: [userId], references: [id])
+
+  ledgerEntries Ledger[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, phoneNumber])
+  @@index([linkedUserId])
+  @@map("contacts")
+}
+
+model TransactionRequest{
+  id String @id @default(uuid())
+  amount Decimal @db.Decimal(10,2)
+  type TxType
+  status TxStatus @default(PENDING)
+  note String?
+
+  // initiator
+  senderId String
+  sender User @relation("Sender", fields: [senderId], references: [id])
+
+  // approver
+  recieverPhone String?
+  recieverId String?
+  reciever User? @relation("Reciever", fields: [recieverId], references: [id])
+
+  // notification tracking
+  lastReminderSent DateTime?
+  reminderCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  ledgerEntries Ledger[]
+
+  @@index([recieverPhone, status])
+  @@map("transaction_requests")
+}
+
+model Ledger{
+  id String @id @default(uuid())
+  amount Decimal @db.Decimal(10,2)
+  type TxType
+
+  note String?
+
+  requestId String?
+  request TransactionRequest? @relation(fields: [requestId], references: [id])
+
+  // track approval
+  approvedBy String?
+  approvedAt DateTime?
+  
+  balanceAfter Decimal @db.Decimal(12,2)
+  transactionDate DateTime @default(now())
+
+  //relation
+  contactId String
+  contact Contact @relation(fields: [contactId], references: [id])
+
+  userId String
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, transactionDate])
+  @@map("ledger")
+
+}
+
+
+
