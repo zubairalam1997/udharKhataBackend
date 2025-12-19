@@ -4,6 +4,11 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const verifyJWT = asyncHandler(async(req,res,next) => {
+
+     // Add debug logs
+    console.log('Cookies:', req.cookies);
+    console.log('Authorization header:', req.header("Authorization"));
+    
     const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
 
     if(!token){
