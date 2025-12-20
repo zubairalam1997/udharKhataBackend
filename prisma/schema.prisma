@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
 }
 
 enum UserType {
@@ -51,7 +51,7 @@ model User {
   // requests initiated
   sentRequests TransactionRequest[] @relation("Sender")
   // requests recieved
-  recievedRequests TransactionRequest[] @relation("Reciever")
+  recievedRequests TransactionRequest[] @relation("Receiver")
 
   // relations
   contacts Contact[]
@@ -100,9 +100,9 @@ model TransactionRequest{
   sender User @relation("Sender", fields: [senderId], references: [id])
 
   // approver
-  recieverPhone String?
-  recieverId String?
-  reciever User? @relation("Reciever", fields: [recieverId], references: [id])
+  receiverPhone String?
+  receiverId String?
+  receiver User? @relation("Receiver", fields: [receiverId], references: [id])
 
   // notification tracking
   lastReminderSent DateTime?
@@ -113,7 +113,7 @@ model TransactionRequest{
 
   ledgerEntries Ledger[]
 
-  @@index([recieverPhone, status])
+  @@index([receiverPhone, status])
   @@map("transaction_requests")
 }
 

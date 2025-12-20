@@ -46,8 +46,8 @@ CREATE TABLE "transaction_requests" (
     "status" "TxStatus" NOT NULL DEFAULT 'PENDING',
     "note" TEXT,
     "senderId" TEXT NOT NULL,
-    "recieverPhone" TEXT,
-    "recieverId" TEXT,
+    "receiverPhone" TEXT,
+    "receiverId" TEXT,
     "lastReminderSent" TIMESTAMP(3),
     "reminderCount" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -86,7 +86,7 @@ CREATE INDEX "contacts_linkedUserId_idx" ON "contacts"("linkedUserId");
 CREATE UNIQUE INDEX "contacts_userId_phoneNumber_key" ON "contacts"("userId", "phoneNumber");
 
 -- CreateIndex
-CREATE INDEX "transaction_requests_recieverPhone_status_idx" ON "transaction_requests"("recieverPhone", "status");
+CREATE INDEX "transaction_requests_receiverPhone_status_idx" ON "transaction_requests"("receiverPhone", "status");
 
 -- CreateIndex
 CREATE INDEX "ledger_userId_transactionDate_idx" ON "ledger"("userId", "transactionDate");
@@ -98,7 +98,7 @@ ALTER TABLE "contacts" ADD CONSTRAINT "contacts_userId_fkey" FOREIGN KEY ("userI
 ALTER TABLE "transaction_requests" ADD CONSTRAINT "transaction_requests_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "transaction_requests" ADD CONSTRAINT "transaction_requests_recieverId_fkey" FOREIGN KEY ("recieverId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "transaction_requests" ADD CONSTRAINT "transaction_requests_receiverId_fkey" FOREIGN KEY ("receiverId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ledger" ADD CONSTRAINT "ledger_requestId_fkey" FOREIGN KEY ("requestId") REFERENCES "transaction_requests"("id") ON DELETE SET NULL ON UPDATE CASCADE;
