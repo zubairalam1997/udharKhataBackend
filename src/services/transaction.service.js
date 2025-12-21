@@ -1,8 +1,6 @@
-import { Result } from "pg";
 import prisma from "../db/db.config.js";
 import { ApiError } from "../utils/ApiError.js";
 import { Decimal } from "@prisma/client/runtime/client";
-import { th } from "zod/locales";
 
 class TransactionService{
 

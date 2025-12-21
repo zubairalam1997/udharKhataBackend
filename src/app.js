@@ -5,6 +5,7 @@ import cors from "cors";
 import errorHandler from "./middlewares/errorHandler.middleware.js";
 import authRouter from "./routes/auth.route.js";
 import transactionRouter from "./routes/transaction.route.js";
+import contactRouter from "./routes/contact.route.js"; 
 
 const app = express();
 
@@ -26,7 +27,9 @@ app.get('/health', (req, res) => {
 // auth routes
 app.use('/api/v1/auth', authRouter);
 //transaction routes
-app.use('/api/v1/transactions', transactionRouter)
+app.use('/api/v1/transactions', transactionRouter);
+// contact routes
+app.use('/api/v1/contact', contactRouter);
 
 // 404 handler
 app.use((req, res)=> {
