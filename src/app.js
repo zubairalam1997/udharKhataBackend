@@ -6,6 +6,7 @@ import errorHandler from "./middlewares/errorHandler.middleware.js";
 import authRouter from "./routes/auth.route.js";
 import transactionRouter from "./routes/transaction.route.js";
 import contactRouter from "./routes/contact.route.js"; 
+import ledgerCompatRouter from "./routes/ledgerCompat.route.js";
 
 const app = express();
 
@@ -25,11 +26,17 @@ app.get('/health', (req, res) => {
 });
 
 // auth routes
-app.use('/api/v1/auth', authRouter);
+// app.use('/api/v1/auth', authRouter);
+app.use('/auth', authRouter);
 //transaction routes
-app.use('/api/v1/transactions', transactionRouter);
+// app.use('/api/v1/transactions', transactionRouter);
+app.use('/transactions', transactionRouter);
 // contact routes
-app.use('/api/v1/contact', contactRouter);
+// app.use('/api/v1/contact', contactRouter);
+app.use('/contact', contactRouter);
+// Prisma-backed compatibility routes for ledger frontend
+// app.use('/api', ledgerCompatRouter);
+app.use('/', ledgerCompatRouter);
 
 // 404 handler
 app.use((req, res)=> {

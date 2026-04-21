@@ -5,82 +5,31 @@ import { Decimal } from "@prisma/client/runtime/client";
 class TransactionService{
 
     // create transaction request
-    async createRequest(senderId, data){
-        const {receiverPhone, name, amount, type, note} = data;
+   // transaction.service.js
+async createRequest(senderId, data) {
+    const { receiverPhone, amount, type, note } = data;
 
-        // check if sender is tying to create a request for themselves
-        const sender = await prisma.user.findUnique({
-            where:{id : senderId},
-            select: {phoneNumber: true}
-        });
+    // Find the receiver in the database using the phone number
+    const receiver = await prisma.user.findUnique({
+        where: { phoneNumber: receiverPhone }
+    });
 
-        if(sender.phoneNumber === receiverPhone){
-            throw new ApiError(400, "Cannot create transaction request for yourself");
-        }
-
-        // find or create contact
-        let contact = await prisma.contact.findUnique({
-            where: {
-                userId_phoneNumber:{
-                    userId: senderId,
-                    phoneNumber: receiverPhone
-                }
-            }
-        });
-        const receiverName = (!name) ? receiverPhone : name;
-        
-        // check if receiver is registered to link their id
-            const receiverUser = await prisma.user.findUnique({
-                where: {phoneNumber: receiverPhone},
-                select:{
-                    id: true, 
-                    displayName: true,
-                    businessName: true,
-                }
-            });
-
-        // create contact if not found
-        if(!contact){
-            
-            contact = await prisma.contact.create({
-                data:{
-                    userId: senderId,
-                    phoneNumber: receiverPhone,
-                    name: receiverUser?.displayName || receiverUser?.businessName || receiverName,
-                    linkedUserId: receiverUser?.id 
-                }
-            });
-
-        }
-
-        // create transaction request
-        const request = await prisma.transactionRequest.create({
-            data:{
-                senderId,
-                receiverPhone,
-                receiverId: receiverUser?.id,
-                amount: new Decimal(amount),
-                type,
-                note,
-                expiresAt: new Date(Date.now() + 7*24*60*60*1000)
-            },
-            include:{
-                sender:{
-                    select:{
-                    phoneNumber: true,
-                    displayName: true,
-                    businessName: true,
-                    userType: true
-                    }
-                }
-            }
-        }); 
-
-        //TODO: Send SMS if not registered OR a push notification if registered
-
-        return request;
-
+    if (!receiver) {
+        throw new ApiError(404, "Recipient not found with this phone number");
     }
+
+    // Create the request
+    return await prisma.transactionRequest.create({
+        data: {
+            senderId,
+            receiverId: receiver.id, // This is where the ID finally gets used
+            amount,
+            type,
+            note,
+            status: 'PENDING'
+        }
+    });
+}
 
     // Handle transaction request(approve/reject)
     async handleRequest(userId, requestId, action, rejectionReason){

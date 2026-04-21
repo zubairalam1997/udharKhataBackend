@@ -25,13 +25,13 @@ const sendOTP = asyncHandler(async(req,res) => {
 });
 
 const verifyOTP = asyncHandler(async(req, res) => {
-    const {phoneNumber, otp} = req.body;
+    const {phoneNumber, otp, name,} = req.body;
 
-    if(!phoneNumber || !otp){
-        throw new ApiError(400, "Phone number and OTP required");
+    if(!phoneNumber || !name || !otp){
+        throw new ApiError(400, "Phone number, name, and OTP required");
     }
 
-    const result = await AuthService.verifyOTP(phoneNumber, otp);
+    const result = await AuthService.verifyOTP(phoneNumber,  otp, name );
 
     res.cookie('accessToken', result.accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
     res.cookie('refreshToken', result.refreshToken, cookieOptions);

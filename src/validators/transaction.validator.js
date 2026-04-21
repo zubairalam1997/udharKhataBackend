@@ -10,14 +10,15 @@ export const createTransactionRequestSchema = z.object({
             .positive('Amount must be positive')
             .max(1000000, 'Amount cannot exceed ₹10,00,000')
             .refine(val => Number(val.toFixed(2)) === val, 'Amount can have maximum 2 decimal places'),
-        type: z.enum(['CREDIT', 'PAYMENT'], {
-            errorMap: () => ({ message: 'Type must be CREDIT or PAYMENT' })
+        type: z.enum(['given', 'received'], {
+            errorMap: () => ({ message: 'Type must be given or received' })
         }),
         note: z.string()
             .max(200, 'Note cannot exceed 200 characters')
             .optional()
     })
 });
+
 
 export const handleTransactionRequestSchema = z.object({
     params: z.object({

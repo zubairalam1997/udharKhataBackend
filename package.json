@@ -18,8 +18,8 @@
   },
   "homepage": "https://github.com/moshahidraza1/udharKhataBackend#readme",
   "dependencies": {
-    "@prisma/adapter-pg": "^7.2.0",
-    "@prisma/client": "^7.2.0",
+    "@prisma/adapter-pg": "^6.16.0",
+    "@prisma/client": "^6.16.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -33,6 +33,6 @@
     "zod": "^4.2.1"
   },
   "devDependencies": {
-    "prisma": "^7.2.0"
+    "prisma": "^6.16.0"
   }
 }
