@@ -210,7 +210,7 @@ class LedgerCompatService {
           receiverPhone: contact.phoneNumber,
           receiverId: receiver?.id,
           amount: validAmount,
-          type: type === "given" ? "CREDIT" : "PAYMENT",
+          type: type === "given" ? "PAYMENT" : "CREDIT",
           note: desc || null,
           status: "PENDING",
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -316,6 +316,9 @@ class LedgerCompatService {
     const mappedStatus = status === "CONFIRMED" ? "APPROVED" : status;
     if (status === "CONFIRMED" ){
       return await TransactionService.handleRequest(userId, notificationId, 'APPROVED');
+    }
+    if (status === "REJECTED" ){
+      return await TransactionService.handleRequest(userId, notificationId, 'REJECTED');
     }
 
     const updated = await prisma.transactionRequest.updateMany({
