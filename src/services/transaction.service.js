@@ -1,6 +1,7 @@
 import prisma from "../db/db.config.js";
 import { ApiError } from "../utils/ApiError.js";
 import { Decimal } from "@prisma/client/runtime/client";
+import { emitToUser } from "../socket/socketServer.js";
 
 class TransactionService{
 
@@ -18,17 +19,39 @@ async createRequest(senderId, data) {
         throw new ApiError(404, "Recipient not found with this phone number");
     }
 
+    const sender = await prisma.user.findUnique({
+        where: { id: senderId },
+        select: {
+            displayName: true,
+            businessName: true,
+            phoneNumber: true
+        }
+    });
+
     // Create the request
-    return await prisma.transactionRequest.create({
+    const request = await prisma.transactionRequest.create({
         data: {
             senderId,
             receiverId: receiver.id, // This is where the ID finally gets used
+            receiverPhone,
             amount,
             type,
             note,
-            status: 'PENDING'
+            status: 'PENDING',
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         }
     });
+
+    emitToUser(receiver.id, "notification:new", {
+        id: request.id,
+        title: "Transaction Confirmation Needed",
+        message: `Rs ${Number(request.amount)} ${type === "PAYMENT" ? "given by" : "requested by"} ${sender?.displayName || sender?.businessName || sender?.phoneNumber || "a user"}`,
+        status: request.status,
+        createdAt: request.createdAt,
+        request,
+    });
+
+    return request;
 }
 
     // Handle transaction request(approve/reject)
@@ -96,7 +119,11 @@ async createRequest(senderId, data) {
                     note: rejectionReason
                 }            
             });
-            // TODO: Send rejection notification to sender
+            emitToUser(request.senderId, "notification:updated", {
+                id: updatedRequest.id,
+                status: "REJECTED",
+                request: updatedRequest,
+            });
 
             return {
                 request: updatedRequest,
@@ -105,7 +132,17 @@ async createRequest(senderId, data) {
         }
 
         // Approve request & add to ledger entries for both users
-        return await this._createLedgerEntries(request, userId);
+        const result = await this._createLedgerEntries(request, userId);
+
+        emitToUser(request.senderId, "notification:updated", {
+            id: request.id,
+            status: "APPROVED",
+            request: result.request,
+        });
+        emitToUser(request.senderId, "ledger:updated", result);
+        emitToUser(userId, "ledger:updated", result);
+
+        return result;
     }
 
     // create two ledger entries for both user

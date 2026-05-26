@@ -2,6 +2,7 @@ import prisma from "../db/db.config.js";
 import { randomUUID } from "crypto";
 import { ApiError } from "../utils/ApiError.js";
 import TransactionService from "./transaction.service.js";
+import { emitToUser } from "../socket/socketServer.js";
 
 const toDateOnly = (value) => new Date(value).toISOString().slice(0, 10);
 
@@ -199,10 +200,20 @@ class LedgerCompatService {
     }
 
     if (confirmationMode === "STRICT") {
-      const receiver = await prisma.user.findUnique({
-        where: { phoneNumber: contact.phoneNumber },
-        select: { id: true },
-      });
+      const [receiver, sender] = await Promise.all([
+        prisma.user.findUnique({
+          where: { phoneNumber: contact.phoneNumber },
+          select: { id: true },
+        }),
+        prisma.user.findUnique({
+          where: { id: userId },
+          select: {
+            displayName: true,
+            businessName: true,
+            phoneNumber: true,
+          },
+        }),
+      ]);
 
       const request = await prisma.transactionRequest.create({
         data: {
@@ -217,17 +228,21 @@ class LedgerCompatService {
         },
       });
 
+      const notification = {
+        id: request.id,
+        customerId: contact.id,
+        transactionId: request.id,
+        title: "Transaction Confirmation Needed",
+        message: `Rs ${validAmount} ${type === "given" ? "given by" : "requested by"} ${sender?.displayName || sender?.businessName || sender?.phoneNumber || "a user"}`,
+        status: "PENDING",
+        createdAt: request.createdAt,
+      };
+
+      emitToUser(receiver?.id, "notification:new", notification);
+
       return {
         transaction: null,
-        notification: {
-          id: request.id,
-          customerId: contact.id,
-          transactionId: request.id,
-          title: "Transaction Confirmation Needed",
-          message: `Rs ${validAmount} ${type === "given" ? "given to" : "received from"} ${contact.name}`,
-          status: "PENDING",
-          createdAt: request.createdAt,
-        },
+        notification,
       };
     }
 
