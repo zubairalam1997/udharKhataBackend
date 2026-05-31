@@ -170,7 +170,7 @@ class LedgerCompatService {
   }
 
   async createTransaction(userId, payload) {
-    const { customerId, type, amount, desc = "", date, confirmationMode = "PERSONAL" } = payload || {};
+    const { customerId, type, amount, note = "", date, confirmationMode = "PERSONAL" } = payload || {};
 
     if (!customerId) {
       throw new ApiError(400, "customerId is required");
@@ -222,7 +222,7 @@ class LedgerCompatService {
           receiverId: receiver?.id,
           amount: validAmount,
           type: type === "given" ? "PAYMENT" : "CREDIT",
-          note: desc || null,
+          note: note || null,
           status: "PENDING",
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         },
