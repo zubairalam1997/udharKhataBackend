@@ -161,6 +161,7 @@ class LedgerCompatService {
         id: row.id,
         customerId: row.contactId,
         date: toDateOnly(row.transactionDate),
+        transactionDate: row.transactionDate,
         desc: row.note || "",
         amount: row.type === "PAYMENT" ? -abs : abs,
         confirmationMode: "PERSONAL",
